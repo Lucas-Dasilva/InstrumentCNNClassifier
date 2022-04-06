@@ -47,4 +47,4 @@ def FFT(signal,rate):
     left_spec = spectrum[:int(len(spectrum)/2)]
     left_freq = frequency[:int(len(spectrum)/2)]
     
-    return spectrum
+    return left_freq
