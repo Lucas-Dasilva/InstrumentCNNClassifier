@@ -31,8 +31,6 @@ def envelope(y, rate, threshold):
             mask.append(False)
     return mask, y_mean
 
-
-
 def FFT(signal,rate):
     """
     Convert the signal from the time domain to the frequency domain
@@ -45,8 +43,7 @@ def FFT(signal,rate):
     left_freq = frequency[:int(len(spectrum)/2)]
     
     return left_freq
-
-
+  
 def downsample_mono(path, sr):
     """
     Downsampling the audio file, code taken from https://github.com/seth814/Audio-Classification
@@ -83,7 +80,6 @@ def save_sample(sample, rate, target_dir, fn, ix):
 def check_dir(path):
   if os.path.exists(path) is False:
       os.mkdir(path)
-
 
 def split_wavs(args):
     """
@@ -175,3 +171,4 @@ if __name__ == '__main__':
   args, _ = parser.parse_known_args()
 
   test_threshold(args)
+
