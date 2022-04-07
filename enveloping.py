@@ -1,42 +1,39 @@
 import argparse
 import os
-from glob import glob
-import numpy as np
+from posixpath import split
 import pandas as pd
+import wavio
+import matplotlib.pyplot as plt
+import numpy as np
 from librosa.core import resample, to_mono
+from scipy.io import wavfile
 from tqdm import tqdm
+from glob import glob
 
 
-def Envelope(signal, rate, threshold):
+def envelope(y, rate, threshold):
     """
     Converts audio data in the form of a numpy array to pandas series,
     finds the rolling average and applies the abs value to the signal
     at all points.
-
-    Then we will filter out data below the threshold and fill the array 'mask'. 
-
+    Then we will filter out data below the threshold and fill the array 'enveloped'. 
     """
 
     mask = []
-    signal = pd.Series(signal).apply(np.abs)
-    signal_mean = signal.rolling(window = int(rate/10), min_periods = 1, center = True).mean()
-
-    #Filter out data below the threshold.
-    
-    for mean in signal_mean:
-
+    y = pd.Series(y).apply(np.abs)
+    y_mean = y.rolling(window=int(rate/20),
+                        min_periods=1,
+                        center=True).max()
+    for mean in y_mean:
         if mean > threshold:
             mask.append(True)
-            
         else:
             mask.append(False)
-
-    return mask, signal_mean
+    return mask, y_mean
 
 def FFT(signal,rate):
     """
     Convert the signal from the time domain to the frequency domain
-
     """
     signal_fft = np.fft.fft(signal)
     spectrum = np.abs(signal_fft)
@@ -46,3 +43,132 @@ def FFT(signal,rate):
     left_freq = frequency[:int(len(spectrum)/2)]
     
     return left_freq
+  
+def downsample_mono(path, sr):
+    """
+    Downsampling the audio file, code taken from https://github.com/seth814/Audio-Classification
+    """
+
+    obj = wavio.read(path)
+    wav = obj.data.astype(np.float32, order='F')
+    rate = obj.rate
+    try:
+        channel = wav.shape[1]
+        if channel == 2:
+            wav = to_mono(wav.T)
+        elif channel == 1:
+            wav = to_mono(wav.reshape(-1))
+    except IndexError:
+        wav = to_mono(wav.reshape(-1))
+        pass
+    except Exception as exc:
+        raise exc
+    wav = resample(wav, rate, sr)
+    wav = wav.astype(np.int16)
+    return sr, wav
+
+def save_sample(sample, rate, target_dir, fn, ix):
+    """
+    saving the sample file: code taken from https://github.com/seth814/Audio-Classification
+    """
+    fn = fn.split('.wav')[0]
+    dst_path = os.path.join(target_dir.split('.')[0], fn+'_{}.wav'.format(str(ix)))
+    if os.path.exists(dst_path):
+        return
+    wavfile.write(dst_path, rate, sample)
+
+def check_dir(path):
+  if os.path.exists(path) is False:
+      os.mkdir(path)
+
+def split_wavs(args):
+    """
+    split_wavs takes all source audio files and envelopes it such that
+    the threshold frequency is applied using enveloping
+
+    Algorithm taken from: https://github.com/seth814/Audio-Classification
+    :root_dir: Root directory name
+    :dst_dir: destination in which cleaned audio files are placed
+    :delta_time: The time in seconds to sample the audio file
+    :sample_rate: The rate in which to downsample the audio
+    :threshold: magnitude of the threshold (int value)
+
+    :return: Nothing
+
+
+    """ 
+
+    src_root = args.src_root
+    dst_root = args.dst_root
+    dt = args.delta_time
+
+    wav_paths = glob('{}/**'.format(src_root), recursive=True)
+    wav_paths = [x for x in wav_paths if '.wav' in x]
+    dirs = os.listdir(src_root)
+    check_dir(dst_root)
+    classes = os.listdir(src_root)
+    for _cls in classes:
+        target_dir = os.path.join(dst_root, _cls)
+        check_dir(target_dir)
+        src_dir = os.path.join(src_root, _cls)
+        for fn in tqdm(os.listdir(src_dir)):
+            src_fn = os.path.join(src_dir, fn)
+            rate, wav = downsample_mono(src_fn, args.sr)
+            mask, y_mean = envelope(wav, rate, threshold=args.threshold)
+            wav = wav[mask]
+            delta_sample = int(dt*rate)
+
+            # cleaned audio is less than a single sample
+            # pad with zeros to delta_sample size
+            if wav.shape[0] < delta_sample:
+                sample = np.zeros(shape=(delta_sample,), dtype=np.int16)
+                sample[:wav.shape[0]] = wav
+                save_sample(sample, rate, target_dir, fn, 0)
+            # step through audio and save every delta_sample
+            # discard the ending audio if it is too short
+            else:
+                trunc = wav.shape[0] % delta_sample
+                for cnt, i in enumerate(np.arange(0, wav.shape[0]-trunc, delta_sample)):
+                    start = int(i)
+                    stop = int(i + delta_sample)
+                    sample = wav[start:stop]
+                    save_sample(sample, rate, target_dir, fn, cnt)
+
+def test_threshold(root_dir, dst_dir, delta_time, sample_rate, threshold):
+  src_root = root_dir
+  wav_paths = glob('{}/**'.format(src_root), recursive=True)
+  wav_path = [x for x in wav_paths if "3a3d0279" in x]
+  if len(wav_path) != 1:
+      print('audio file not found for sub-string: {}'.format("3a3d0279"))
+      return
+  rate, wav = downsample_mono(wav_path[0], sample_rate)
+  mask, env = envelope(wav, rate, threshold=threshold)
+  plt.style.use('ggplot')
+  plt.title('Signal Envelope, Threshold = {}'.format(str(threshold)))
+  plt.plot(wav[np.logical_not(mask)], color='r', label='remove')
+  plt.plot(wav[mask], color='c', label='keep')
+  plt.plot(env, color='m', label='envelope')
+  plt.grid(False)
+  plt.legend(loc='best')
+  plt.show()
+
+if __name__ == '__main__':
+
+  parser = argparse.ArgumentParser(description='Cleaning audio data')
+  parser.add_argument('--src_root', type=str, default='Resources',
+                      help='directory of audio files in total duration')
+  parser.add_argument('--dst_root', type=str, default='clean',
+                      help='directory to put audio files split by delta_time')
+  parser.add_argument('--delta_time', '-dt', type=float, default=1.0,
+                      help='time in seconds to sample audio')
+  parser.add_argument('--sr', type=int, default=16000,
+                      help='rate to downsample audio')
+
+  parser.add_argument('--fn', type=str, default='3a3d0279',
+                      help='file to plot over time to check magnitude')
+  parser.add_argument('--threshold', type=str, default=20,
+                      help='threshold magnitude for np.int16 dtype')
+  args, _ = parser.parse_known_args()
+
+  test_threshold(args)
+
