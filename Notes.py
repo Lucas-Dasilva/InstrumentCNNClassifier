@@ -1,4 +1,24 @@
 """
+Model parameters
+Default = 0.994
+Dropout on output layer: 
+  (0.2) = 0.944 | (0.1) = 0.9323
+
+Hidden Layer regularizer: 
+  (0.0001) to all:
+    training = 93.23% 
+    testing  = 92.85%
+  (0.01) to 1st and 3rd:
+    training = 99.87%
+    testing  = 90.1%
+
+Kernel size: 
+  double each time:
+    training = 100% earlier than before
+    testing = 92.9%
+"""
+
+"""
 How sound is represented by the computer
 
 1. We use a michrophone
