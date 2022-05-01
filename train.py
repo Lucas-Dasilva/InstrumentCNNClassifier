@@ -1,5 +1,5 @@
 """
-Created by: Lucas Da Silva
+Lucas Da Silva & Courtney Cadenhead
 date: 4/21/2022
 Description: Training methods for training our model
 Code Credit: Main ideas taken from seth814 github page
@@ -15,9 +15,9 @@ import os
 def get_model_summary(n_classes, sampling_rate, delta_time, model):
   X = get_features()
   y = get_labels()
-  if model == "5":
+  if model == 5:
     model = Mel5Conv(n_classes, sampling_rate, delta_time)
-  elif model == "2":
+  elif model == 2:
     model = Mel2Conv(n_classes, sampling_rate, delta_time)
   else:
     model = Mel10Conv(n_classes, sampling_rate, delta_time)
@@ -27,10 +27,10 @@ def get_model_summary(n_classes, sampling_rate, delta_time, model):
 def ConvModelFit(n_classes, sampling_rate, delta_time, model, total_epoch):
   X = get_features()
   y = get_labels()
-  if model == "5":
+  if model == 5:
     model = Mel5Conv(n_classes, sampling_rate, delta_time)
     csv_path = os.path.join('logs', '{}_history.csv'.format("Mel5Conv"))
-  elif model == "2":
+  elif model == 2:
     csv_path = os.path.join('logs', '{}_history.csv'.format("Mel2Conv"))
     model = Mel2Conv(n_classes, sampling_rate, delta_time)
   else:
@@ -80,7 +80,7 @@ if __name__ == '__main__':
   batch_size = 32
   n_classes = 10
   epochs = 30
-  model = 5 # Options == 2, 5, 10
+  model = 2 # Options == 2, 5, 10
   # sub = Mel2Conv(n_classes, sampling_rate, delta_time)
   # sub.summary()
   # sub = Mel5Conv(n_classes, sampling_rate, delta_time)

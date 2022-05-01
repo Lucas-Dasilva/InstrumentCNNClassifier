@@ -1,5 +1,5 @@
 """
-Created by: Lucas Da Silva
+Lucas Da Silva & Courtney Cadenhead
 Date: 4/21/2022
 Description: Create a class to store the model parameters and setup the model layers
 """
@@ -25,7 +25,7 @@ class Mel2Conv(Model):
     self.conv_tahn = Conv2D(8, 7, activation='tanh', padding='same')
     self.conv_relu1 = Conv2D(16, 5, activation='relu', padding='same')
     self.flat = Flatten()
-    self.drop = Dropout(rate=0.2)
+    # self.drop = Dropout(rate=0.2)
     self.dense = Dense(64, activation='relu', activity_regularizer=L2(0.001))
     self.soft = Dense(n_classes, activation='softmax')
   def call(self, x):
@@ -38,7 +38,7 @@ class Mel2Conv(Model):
     x = self.max_pool(x)
     x = self.max_pool(x)
     x = self.flat(x)
-    x = self.drop(x)
+    # x = self.drop(x)
     x = self.dense(x)
     return self.soft(x)
 

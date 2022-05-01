@@ -1,3 +1,9 @@
+"""
+Lucas Da Silva & Courtney Cadenhead
+date: 4/21/2022
+Description: Code mostly from https://github.com/seth814/Instrument-Classifier/blob/master/audio_eda.py
+"""
+
 import argparse
 import os
 from posixpath import split
@@ -134,7 +140,7 @@ def split_wavs(args):
                     sample = wav[start:stop]
                     save_sample(sample, rate, target_dir, fn, cnt)
 
-def test_threshold(root_dir, dst_dir, delta_time, sample_rate, threshold):
+def test_threshold(root_dir, sample_rate, threshold):
   src_root = root_dir
   wav_paths = glob('{}/**'.format(src_root), recursive=True)
   wav_path = [x for x in wav_paths if "3a3d0279" in x]
@@ -170,5 +176,5 @@ if __name__ == '__main__':
                       help='threshold magnitude for np.int16 dtype')
   args, _ = parser.parse_known_args()
 
-  test_threshold(args)
+  test_threshold("Resources", 16000, 200)
 

@@ -1,5 +1,5 @@
 """
-Created by: Lucas Da Silva
+Lucas Da Silva & Courtney Cadenhead
 date: 4/21/2022
 Description: This file is for creating and mapping the training into tensor objects, that are to be used in the model.
 Code: Data Parser Class taken but modded from https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
