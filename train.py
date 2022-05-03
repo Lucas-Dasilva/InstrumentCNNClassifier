@@ -8,6 +8,7 @@ from keras.callbacks import CSVLogger
 from sklearn.model_selection import train_test_split
 from setup import get_features, get_labels, DataParser
 from model import Mel2Conv, Mel5Conv, Mel10Conv
+from predict import make_prediction
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -63,7 +64,7 @@ def train(sampling_rate, delta_time, batch_size, n_classes, epochs, model):
   # Plot validation/training data loss/accuracy
   loss_train = model_history.history['accuracy']
   loss_test = model_history.history['val_accuracy']
-  epochs = range(1,31)
+  epochs = range(1,epochs+1)
   plt.plot(epochs, loss_train, 'b', label='Training Accuracy')
   plt.plot(epochs, loss_test, 'r', label='Validation Accuracy')
   plt.title('Training and Validation Accuracy')
@@ -71,6 +72,7 @@ def train(sampling_rate, delta_time, batch_size, n_classes, epochs, model):
   plt.ylabel('Accuracy')
   plt.legend()
   plt.show()
+  return model
   
 
 if __name__ == '__main__':
@@ -80,13 +82,14 @@ if __name__ == '__main__':
   batch_size = 32
   n_classes = 10
   epochs = 30
-  model = 2 # Options == 2, 5, 10
+  model = 5 # Options == 2, 5, 10
   # sub = Mel2Conv(n_classes, sampling_rate, delta_time)
   # sub.summary()
   # sub = Mel5Conv(n_classes, sampling_rate, delta_time)
   # sub.summary()
   # sub = Mel10Conv(n_classes, sampling_rate, delta_time)
   # sub.summary()
-  train(sampling_rate, delta_time, batch_size, n_classes, epochs, model)
 
+  model = train(sampling_rate, delta_time, batch_size, n_classes, epochs, model)
+  make_prediction(model, sampling_rate, delta_time)
 

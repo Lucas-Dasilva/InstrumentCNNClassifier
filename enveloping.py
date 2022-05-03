@@ -69,7 +69,7 @@ def downsample_mono(path, sr):
         pass
     except Exception as exc:
         raise exc
-    wav = resample(wav, rate, sr)
+    wav = resample(wav, orig_sr=rate, target_sr=sr)
     wav = wav.astype(np.int16)
     return sr, wav
 
